@@ -94,7 +94,6 @@ PREFER_LOCAL_WORKBOOK=true
 ALLOW_LOCAL_FALLBACK=false
 QUERY_ARCHIVE_FIRST=true
 ARCHIVE_DB_PATH=data/databank.sqlite
-ADMIN_TOKEN=
 ```
 
 Set `OPENAI_API_KEY` to enable AI answers and reports.
@@ -143,7 +142,6 @@ PREFER_LOCAL_WORKBOOK=false
 ALLOW_LOCAL_FALLBACK=false
 QUERY_ARCHIVE_FIRST=true
 ARCHIVE_DB_PATH=data/databank.sqlite
-ADMIN_TOKEN=<long-random-secret>
 ```
 
 Ingestion options:
@@ -153,7 +151,6 @@ Ingestion options:
 
 ```bash
 curl -X POST https://databank.duade.work/api/ingest \
-  -H "X-Admin-Token: $ADMIN_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{}'
 ```

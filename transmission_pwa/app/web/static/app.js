@@ -6,16 +6,11 @@ const sourceForm = document.querySelector("#sourceForm");
 const installButton = document.querySelector("#installButton");
 const archiveStatus = document.querySelector("#archiveStatus");
 const ingestButton = document.querySelector("#ingestButton");
-const adminToken = document.querySelector("#adminToken");
 let deferredPrompt;
 
 async function api(path, options = {}) {
-  const { admin = false, headers: optionHeaders = {}, ...fetchOptions } = options;
+  const { headers: optionHeaders = {}, ...fetchOptions } = options;
   const headers = { "Content-Type": "application/json", ...optionHeaders };
-  const token = adminToken?.value?.trim();
-  if (token && (admin || path === "/api/ingest")) {
-    headers["X-Admin-Token"] = token;
-  }
   const response = await fetch(path, {
     headers,
     ...fetchOptions,
@@ -92,7 +87,6 @@ sourceForm.addEventListener("submit", async (event) => {
   try {
     await api("/api/sources", {
       method: "POST",
-      admin: true,
       body: JSON.stringify({
         name: document.querySelector("#sourceName").value,
         description: document.querySelector("#sourceDescription").value,
@@ -112,7 +106,7 @@ ingestButton?.addEventListener("click", async () => {
   ingestButton.disabled = true;
   archiveStatus.textContent = "Reading live sheet...";
   try {
-    const result = await api("/api/ingest", { method: "POST", body: "{}", admin: true });
+    const result = await api("/api/ingest", { method: "POST", body: "{}" });
     renderArchive(result.archive);
     await loadCatalog();
   } catch (error) {

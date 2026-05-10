@@ -389,10 +389,6 @@ label {
   opacity: 0.6;
 }
 
-.token-field {
-  margin-bottom: 14px;
-}
-
 .source-list {
   display: grid;
   gap: 12px;
