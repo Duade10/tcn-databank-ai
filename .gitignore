@@ -1,0 +1,23 @@
+# Secrets and local credentials
+.env
+*.env
+keys.json
+datatable/keys.json
+
+# Local app/runtime state
+.venv/
+__pycache__/
+*.pyc
+
+# Existing legacy app and nested repo are local reference material only
+datatable/
+
+# Uploaded/reference material not needed in the public code repo
+*.xlsx
+*.xls
+*.csv
+*:Zone.Identifier
+image1.png
+image2.png
+image3.png
+

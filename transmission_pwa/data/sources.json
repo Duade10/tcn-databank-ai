@@ -1,0 +1,24 @@
+[
+  {
+    "id": "osogbo-rcc-330-132kv-load-management-may-2026",
+    "name": "Osogbo RCC 330/132kV Lines Load Management Tracking",
+    "description": "Daily hourly load-management tracker for Osogbo Regional Control Centre 330kV and 132kV transmission lines. Contains ACC, transmission interface, line voltage, line nomenclature, DISCO, monthly maximum references, and 01:00-24:00 MW or operational-status readings.",
+    "sheet_id": "1jsxcy4UcJtn5cCXFC--zBrcexRD8oSvoelHiI9_aXRE",
+    "sheet_url": "https://docs.google.com/spreadsheets/d/1jsxcy4UcJtn5cCXFC--zBrcexRD8oSvoelHiI9_aXRE/edit",
+    "source_type": "google_sheet",
+    "category": "Transmission line load management",
+    "voltage_levels": [
+      "330kV",
+      "132kV"
+    ],
+    "tags": [
+      "Osogbo RCC",
+      "load management",
+      "330kV lines",
+      "132kV lines",
+      "hourly readings",
+      "DISCO"
+    ],
+    "active": true
+  }
+]
