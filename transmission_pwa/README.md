@@ -2,7 +2,7 @@
 
 FastAPI-powered PWA for querying Power Transmission Station operational data in natural language.
 
-The existing `datatable/keys.json` service-account file is reused for Google Sheets access. The app only requests read-only spreadsheet scope and does not implement any Google Sheet write, update, or delete operation.
+Google Sheets credentials are configured locally through `GOOGLE_SERVICE_ACCOUNT_FILE`. The app only requests read-only spreadsheet scope and does not implement any Google Sheet write, update, or delete operation.
 
 ## Current Databank Source
 
@@ -29,4 +29,3 @@ uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
 Open `http://127.0.0.1:8000`.
-

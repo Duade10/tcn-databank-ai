@@ -7,7 +7,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     app_name: str = "Transmission Station AI"
     openai_api_key: str = ""
-    google_service_account_file: Path = Path("../datatable/keys.json")
+    google_service_account_file: Path = Path("service-account.json")
     data_cache_seconds: int = 300
     prefer_local_workbook: bool = True
 

@@ -1,8 +1,8 @@
 # Secrets and local credentials
 .env
 *.env
-keys.json
-datatable/keys.json
+*service-account*.json
+*credentials*.json
 
 # Local app/runtime state
 .venv/
@@ -20,4 +20,3 @@ datatable/
 image1.png
 image2.png
 image3.png
-
