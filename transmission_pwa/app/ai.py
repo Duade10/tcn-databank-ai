@@ -47,7 +47,8 @@ MONTHS = {
 
 def select_context(question: str, records: list[dict[str, Any]], limit: int = 180) -> list[dict[str, Any]]:
     q = question.lower()
-    requested_dates = extract_requested_dates(q)
+    requested_dates = extract_requested_dates(q, available_dates={record.get("date") for record in records if record.get("date")})
+    requested_hours = extract_requested_hours(q)
     scored: list[tuple[int, dict[str, Any]]] = []
     for record in records:
         haystack = " ".join(
@@ -57,6 +58,8 @@ def select_context(question: str, records: list[dict[str, Any]], limit: int = 18
         score = sum(2 for token in re.findall(r"[a-z0-9/.-]+", q) if len(token) > 2 and token in haystack)
         if requested_dates and record.get("date") in requested_dates:
             score += 12
+        if requested_hours and record.get("hour") in requested_hours:
+            score += 8
         if record["status"] and any(word in q for word in KEYWORDS["status"]):
             score += 5
         if record["load_mw"] is not None and any(word in q for word in KEYWORDS["max"] + KEYWORDS["min"]):
@@ -68,7 +71,7 @@ def select_context(question: str, records: list[dict[str, Any]], limit: int = 18
     return [record for _, record in sorted(scored, key=lambda item: item[0], reverse=True)[:limit]]
 
 
-def extract_requested_dates(question: str, default_year: int = 2026) -> set[str]:
+def extract_requested_dates(question: str, default_year: int = 2026, available_dates: set[str] | None = None) -> set[str]:
     dates: set[str] = set(re.findall(r"\b20\d{2}-\d{2}-\d{2}\b", question))
 
     for match in re.finditer(r"\b(\d{1,2})(?:st|nd|rd|th)?(?:\s+of)?\s+([a-z]+)(?:\s+(20\d{2}))?\b", question):
@@ -85,7 +88,23 @@ def extract_requested_dates(question: str, default_year: int = 2026) -> set[str]
         if month:
             add_date(dates, year, month, day)
 
+    if not dates and available_dates:
+        for match in re.finditer(r"\b(\d{1,2})(?:st|nd|rd|th)\b", question):
+            day = int(match.group(1))
+            suffix = f"-{day:02d}"
+            dates.update(date_value for date_value in available_dates if date_value.endswith(suffix))
+
     return dates
+
+
+def extract_requested_hours(question: str) -> set[str]:
+    hours: set[str] = set()
+    for match in re.finditer(r"\b([01]?\d|2[0-4]):([0-5]\d)\b", question):
+        hour = int(match.group(1))
+        minute = int(match.group(2))
+        if minute == 0 and 1 <= hour <= 24:
+            hours.add(f"{hour:02d}:00")
+    return hours
 
 
 def add_date(dates: set[str], year: int, month: int, day: int) -> None:
