@@ -92,6 +92,9 @@ GOOGLE_SERVICE_ACCOUNT_FILE=/absolute/path/to/service-account.json
 DATA_CACHE_SECONDS=300
 PREFER_LOCAL_WORKBOOK=true
 ALLOW_LOCAL_FALLBACK=false
+QUERY_ARCHIVE_FIRST=true
+ARCHIVE_DB_PATH=data/databank.sqlite
+ADMIN_TOKEN=
 ```
 
 Set `OPENAI_API_KEY` to enable AI answers and reports.
@@ -128,6 +131,34 @@ PREFER_LOCAL_WORKBOOK=false
 
 The app will still use read-only Google Sheets credentials. By default, live-mode failures are surfaced instead of being hidden by stale local data.
 Set `ALLOW_LOCAL_FALLBACK=true` only when you explicitly want that fallback behavior.
+
+## Local Archive and Ingestion
+
+The app can ingest live Google Sheet records into a local SQLite archive and answer from that archive first. This prevents data loss when the monthly Google Sheet is cleared.
+
+Recommended production settings:
+
+```env
+PREFER_LOCAL_WORKBOOK=false
+ALLOW_LOCAL_FALLBACK=false
+QUERY_ARCHIVE_FIRST=true
+ARCHIVE_DB_PATH=data/databank.sqlite
+ADMIN_TOKEN=<long-random-secret>
+```
+
+Ingestion options:
+
+- Use the Admin tab and tap **Ingest Live**.
+- Or call the API:
+
+```bash
+curl -X POST https://databank.duade.work/api/ingest \
+  -H "X-Admin-Token: $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{}'
+```
+
+For secure storage, keep the SQLite file outside Git, restrict it to the service user, and back it up off-server. For larger deployments, move the archive to managed PostgreSQL with encrypted storage, daily backups, and role-based database credentials.
 
 ## API Endpoints
 

@@ -11,6 +11,8 @@ class DatabankSource(BaseModel):
     category: str
     voltage_levels: list[str] = Field(default_factory=list)
     tags: list[str] = Field(default_factory=list)
+    default_year: int | None = None
+    default_month: int | None = None
     active: bool = True
 
 
@@ -32,4 +34,3 @@ class QueryResponse(BaseModel):
     answer: str
     selected_sources: list[str]
     context_rows: int
-

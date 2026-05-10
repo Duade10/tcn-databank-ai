@@ -11,6 +11,9 @@ class Settings(BaseSettings):
     data_cache_seconds: int = 300
     prefer_local_workbook: bool = True
     allow_local_fallback: bool = False
+    query_archive_first: bool = True
+    archive_db_path: Path = Path("data/databank.sqlite")
+    admin_token: str = ""
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 

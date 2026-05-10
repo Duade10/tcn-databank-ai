@@ -21,6 +21,7 @@ cp .env.example .env
 ```
 
 Set `OPENAI_API_KEY` in `.env` for AI answers and reports.
+Set `QUERY_ARCHIVE_FIRST=true` and run ingestion to keep a local SQLite archive of live sheet data before the source sheet is cleared.
 
 ## Run
 

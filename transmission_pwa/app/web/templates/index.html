@@ -78,6 +78,14 @@
           <h1>Register sheets</h1>
         </header>
         <section class="bottom-sheet">
+          <section class="archive-panel">
+            <div>
+              <span>Archive</span>
+              <strong id="archiveStatus">Checking local store...</strong>
+            </div>
+            <button id="ingestButton" type="button">Ingest Live</button>
+          </section>
+          <label class="token-field">Admin token<input id="adminToken" type="password" autocomplete="off" placeholder="Required for ingestion and source changes"></label>
           <form id="sourceForm" class="admin-form">
             <label>Name<input id="sourceName" required value="Osogbo RCC 330/132kV Lines Load Management Tracking"></label>
             <label>Description<textarea id="sourceDescription" required>Daily hourly load-management tracker for transmission line readings.</textarea></label>

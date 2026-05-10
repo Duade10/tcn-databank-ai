@@ -2,15 +2,18 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, Header, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from .ai import answer_question, select_context
+from .config import get_settings
 from .databank import (
+    archive_summary,
     build_catalog,
     extract_sheet_id,
+    ingest_sources,
     load_records_for_sources,
     list_sources,
     save_source,
@@ -38,7 +41,8 @@ async def sources() -> list[DatabankSource]:
 
 
 @app.post("/api/sources")
-async def create_source(payload: SourceCreate) -> DatabankSource:
+async def create_source(payload: SourceCreate, x_admin_token: str | None = Header(default=None)) -> DatabankSource:
+    require_admin_token(x_admin_token)
     sheet_id = extract_sheet_id(payload.sheet_url_or_id)
     source = DatabankSource(
         id=slugify(payload.name),
@@ -58,7 +62,18 @@ async def create_source(payload: SourceCreate) -> DatabankSource:
 @app.get("/api/catalog")
 async def catalog() -> dict:
     records = load_records_for_sources()
-    return build_catalog(records)
+    return {**build_catalog(records), "archive": archive_summary()}
+
+
+@app.get("/api/archive")
+async def archive() -> dict:
+    return archive_summary()
+
+
+@app.post("/api/ingest")
+async def ingest(x_admin_token: str | None = Header(default=None)) -> dict:
+    require_admin_token(x_admin_token)
+    return ingest_sources()
 
 
 @app.post("/api/query", response_model=QueryResponse)
@@ -74,3 +89,8 @@ async def query(payload: QueryRequest) -> QueryResponse:
         context_rows=len(context),
     )
 
+
+def require_admin_token(token: str | None) -> None:
+    expected = get_settings().admin_token
+    if expected and token != expected:
+        raise HTTPException(status_code=401, detail="Invalid admin token.")

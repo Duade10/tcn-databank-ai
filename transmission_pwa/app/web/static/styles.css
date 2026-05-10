@@ -349,6 +349,50 @@ label {
   min-height: calc(100vh - 210px);
 }
 
+.archive-panel {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 16px;
+  margin-bottom: 14px;
+  border-radius: 24px;
+  background: var(--cream);
+}
+
+.archive-panel span {
+  display: block;
+  color: #4f6f55;
+  font-size: 0.76rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.archive-panel strong {
+  display: block;
+  margin-top: 5px;
+  font-size: 0.96rem;
+  line-height: 1.25;
+}
+
+.archive-panel button {
+  min-height: 44px;
+  border-radius: 999px;
+  padding: 0 15px;
+  background: #111;
+  color: white;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.archive-panel button:disabled {
+  opacity: 0.6;
+}
+
+.token-field {
+  margin-bottom: 14px;
+}
+
 .source-list {
   display: grid;
   gap: 12px;

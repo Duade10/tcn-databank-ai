@@ -11,6 +11,8 @@
       "330kV",
       "132kV"
     ],
+    "default_year": 2026,
+    "default_month": 5,
     "tags": [
       "Osogbo RCC",
       "load management",
