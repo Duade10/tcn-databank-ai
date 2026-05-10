@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import re
+from datetime import date
 from typing import Any
 
 from openai import OpenAI, OpenAIError
@@ -16,9 +17,37 @@ KEYWORDS = {
     "report": ["report", "summary", "brief", "generate"],
 }
 
+MONTHS = {
+    "jan": 1,
+    "january": 1,
+    "feb": 2,
+    "february": 2,
+    "mar": 3,
+    "march": 3,
+    "apr": 4,
+    "april": 4,
+    "may": 5,
+    "jun": 6,
+    "june": 6,
+    "jul": 7,
+    "july": 7,
+    "aug": 8,
+    "august": 8,
+    "sep": 9,
+    "sept": 9,
+    "september": 9,
+    "oct": 10,
+    "october": 10,
+    "nov": 11,
+    "november": 11,
+    "dec": 12,
+    "december": 12,
+}
+
 
 def select_context(question: str, records: list[dict[str, Any]], limit: int = 180) -> list[dict[str, Any]]:
     q = question.lower()
+    requested_dates = extract_requested_dates(q)
     scored: list[tuple[int, dict[str, Any]]] = []
     for record in records:
         haystack = " ".join(
@@ -26,6 +55,8 @@ def select_context(question: str, records: list[dict[str, Any]], limit: int = 18
             for key in ["date", "acc", "transmission_interface", "line_voltage", "line_nomenclature", "disco", "hour", "status"]
         ).lower()
         score = sum(2 for token in re.findall(r"[a-z0-9/.-]+", q) if len(token) > 2 and token in haystack)
+        if requested_dates and record.get("date") in requested_dates:
+            score += 12
         if record["status"] and any(word in q for word in KEYWORDS["status"]):
             score += 5
         if record["load_mw"] is not None and any(word in q for word in KEYWORDS["max"] + KEYWORDS["min"]):
@@ -35,6 +66,33 @@ def select_context(question: str, records: list[dict[str, Any]], limit: int = 18
     if not scored:
         return records[:limit]
     return [record for _, record in sorted(scored, key=lambda item: item[0], reverse=True)[:limit]]
+
+
+def extract_requested_dates(question: str, default_year: int = 2026) -> set[str]:
+    dates: set[str] = set(re.findall(r"\b20\d{2}-\d{2}-\d{2}\b", question))
+
+    for match in re.finditer(r"\b(\d{1,2})(?:st|nd|rd|th)?(?:\s+of)?\s+([a-z]+)(?:\s+(20\d{2}))?\b", question):
+        day = int(match.group(1))
+        month = MONTHS.get(match.group(2))
+        year = int(match.group(3) or default_year)
+        if month:
+            add_date(dates, year, month, day)
+
+    for match in re.finditer(r"\b([a-z]+)\s+(\d{1,2})(?:st|nd|rd|th)?(?:,?\s+(20\d{2}))?\b", question):
+        month = MONTHS.get(match.group(1))
+        day = int(match.group(2))
+        year = int(match.group(3) or default_year)
+        if month:
+            add_date(dates, year, month, day)
+
+    return dates
+
+
+def add_date(dates: set[str], year: int, month: int, day: int) -> None:
+    try:
+        dates.add(date(year, month, day).isoformat())
+    except ValueError:
+        pass
 
 
 def answer_question(question: str, records: list[dict[str, Any]], mode: str = "answer") -> str:

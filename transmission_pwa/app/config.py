@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     google_service_account_file: Path = Path("service-account.json")
     data_cache_seconds: int = 300
     prefer_local_workbook: bool = True
+    allow_local_fallback: bool = False
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 

@@ -125,7 +125,7 @@ def load_source_records(source: DatabankSource) -> list[dict[str, Any]]:
     try:
         return parse_google_sheet_records(source)
     except Exception:
-        if source.id == DEFAULT_SOURCE_ID and LOCAL_WORKBOOK.exists():
+        if source.id == DEFAULT_SOURCE_ID and settings.allow_local_fallback and LOCAL_WORKBOOK.exists():
             return parse_workbook_records(LOCAL_WORKBOOK, source)
         raise
 
@@ -138,10 +138,15 @@ def parse_google_sheet_records(source: DatabankSource) -> list[dict[str, Any]]:
     )
     client = gspread.authorize(credentials)
     spreadsheet = client.open_by_key(source.sheet_id)
+    daily_titles = [worksheet.title for worksheet in spreadsheet.worksheets() if ordinal_day(worksheet.title)]
+    ranges = [f"{quote_sheet_name(title)}!A1:AI80" for title in daily_titles]
+    if not ranges:
+        return []
+    batch = spreadsheet.values_batch_get(ranges, params={"majorDimension": "ROWS"})
     records: list[dict[str, Any]] = []
-    for worksheet in spreadsheet.worksheets():
-        values = worksheet.get_all_values()
-        records.extend(parse_grid_records(values, worksheet.title, source))
+    for title, value_range in zip(daily_titles, batch.get("valueRanges", [])):
+        values = value_range.get("values", [])
+        records.extend(parse_grid_records(values, title, source))
     return records
 
 
@@ -251,6 +256,10 @@ def ordinal_day(sheet_name: str) -> int | None:
         return None
     day = int(match.group(1))
     return day if 1 <= day <= 31 else None
+
+
+def quote_sheet_name(sheet_name: str) -> str:
+    return "'" + sheet_name.replace("'", "''") + "'"
 
 
 def normalize_hour(value: str) -> str | None:

@@ -91,6 +91,7 @@ OPENAI_API_KEY=
 GOOGLE_SERVICE_ACCOUNT_FILE=/absolute/path/to/service-account.json
 DATA_CACHE_SECONDS=300
 PREFER_LOCAL_WORKBOOK=true
+ALLOW_LOCAL_FALLBACK=false
 ```
 
 Set `OPENAI_API_KEY` to enable AI answers and reports.
@@ -125,7 +126,8 @@ To read the live Google Sheet instead:
 PREFER_LOCAL_WORKBOOK=false
 ```
 
-The app will still use read-only Google Sheets credentials and will fall back to the local workbook if live access fails.
+The app will still use read-only Google Sheets credentials. By default, live-mode failures are surfaced instead of being hidden by stale local data.
+Set `ALLOW_LOCAL_FALLBACK=true` only when you explicitly want that fallback behavior.
 
 ## API Endpoints
 
