@@ -24,10 +24,16 @@ class SourceCreate(BaseModel):
     tags: list[str] = Field(default_factory=list)
 
 
+class ChatMessage(BaseModel):
+    role: str
+    content: str
+
+
 class QueryRequest(BaseModel):
     question: str
     source_ids: list[str] | None = None
     mode: str = "answer"
+    history: list[ChatMessage] = Field(default_factory=list)
 
 
 class QueryResponse(BaseModel):

@@ -244,6 +244,37 @@ h1, h2, p {
   gap: 14px;
 }
 
+.chat-messages {
+  display: grid;
+  gap: 12px;
+  max-height: 360px;
+  overflow-y: auto;
+  margin-bottom: 16px;
+  padding: 4px 2px;
+}
+
+.message {
+  max-width: 86%;
+  padding: 13px 15px;
+  border-radius: 22px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+.assistant-message {
+  justify-self: start;
+  color: #263129;
+  background: #f0f4f1;
+  border-bottom-left-radius: 8px;
+}
+
+.user-message {
+  justify-self: end;
+  color: white;
+  background: #111;
+  border-bottom-right-radius: 8px;
+}
+
 .sheet-title {
   display: grid;
   grid-template-columns: 48px 1fr;

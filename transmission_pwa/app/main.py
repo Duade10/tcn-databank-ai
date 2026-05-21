@@ -81,8 +81,9 @@ async def query(payload: QueryRequest) -> QueryResponse:
     records = load_records_for_sources(payload.source_ids)
     if not records:
         raise HTTPException(status_code=404, detail="No databank records are available for the selected source.")
-    context = select_context(payload.question, records)
-    answer = answer_question(payload.question, records, payload.mode)
+    history = [message.model_dump() for message in payload.history]
+    context = select_context(payload.question, records, history=history)
+    answer = answer_question(payload.question, records, payload.mode, history=history)
     return QueryResponse(
         answer=answer,
         selected_sources=sorted({record["source_id"] for record in context}),

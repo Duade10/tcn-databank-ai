@@ -17,6 +17,10 @@ KEYWORDS = {
     "report": ["report", "summary", "brief", "generate"],
 }
 
+ALIASES = {
+    "ganmo": ["gnm", "ganmo"],
+}
+
 MONTHS = {
     "jan": 1,
     "january": 1,
@@ -45,17 +49,23 @@ MONTHS = {
 }
 
 
-def select_context(question: str, records: list[dict[str, Any]], limit: int = 180) -> list[dict[str, Any]]:
-    q = question.lower()
+def select_context(
+    question: str,
+    records: list[dict[str, Any]],
+    limit: int = 180,
+    history: list[dict[str, str]] | None = None,
+) -> list[dict[str, Any]]:
+    q = conversation_query(question, history)
     requested_dates = extract_requested_dates(q, available_dates={record.get("date") for record in records if record.get("date")})
     requested_hours = extract_requested_hours(q)
+    query_tokens = expanded_tokens(q)
     scored: list[tuple[int, dict[str, Any]]] = []
     for record in records:
         haystack = " ".join(
             str(record.get(key) or "")
             for key in ["date", "acc", "transmission_interface", "line_voltage", "line_nomenclature", "disco", "hour", "status"]
         ).lower()
-        score = sum(2 for token in re.findall(r"[a-z0-9/.-]+", q) if len(token) > 2 and token in haystack)
+        score = sum(2 for token in query_tokens if len(token) > 2 and token in haystack)
         if requested_dates and record.get("date") in requested_dates:
             score += 12
         if requested_hours and record.get("hour") in requested_hours:
@@ -69,6 +79,18 @@ def select_context(question: str, records: list[dict[str, Any]], limit: int = 18
     if not scored:
         return records[:limit]
     return [record for _, record in sorted(scored, key=lambda item: item[0], reverse=True)[:limit]]
+
+
+def conversation_query(question: str, history: list[dict[str, str]] | None = None) -> str:
+    recent = " ".join(message.get("content", "") for message in (history or [])[-6:])
+    return f"{recent} {question}".lower()
+
+
+def expanded_tokens(question: str) -> set[str]:
+    tokens = set(re.findall(r"[a-z0-9/.-]+", question))
+    for token in list(tokens):
+        tokens.update(ALIASES.get(token, []))
+    return tokens
 
 
 def extract_requested_dates(question: str, default_year: int = 2026, available_dates: set[str] | None = None) -> set[str]:
@@ -114,9 +136,14 @@ def add_date(dates: set[str], year: int, month: int, day: int) -> None:
         pass
 
 
-def answer_question(question: str, records: list[dict[str, Any]], mode: str = "answer") -> str:
+def answer_question(
+    question: str,
+    records: list[dict[str, Any]],
+    mode: str = "answer",
+    history: list[dict[str, str]] | None = None,
+) -> str:
     settings = get_settings()
-    context = select_context(question, records)
+    context = select_context(question, records, history=history)
     if not settings.openai_api_key:
         return offline_answer(question, context)
 
@@ -132,6 +159,8 @@ def answer_question(question: str, records: list[dict[str, Any]], mode: str = "a
                         "You are an assistant for a Nigerian power transmission station. "
                         "Use only the provided databank records. Be precise with dates, line names, voltage levels, "
                         "hours, MW values, and operational statuses. If the data is insufficient, say what is missing. "
+                        "If a station, interface, or alias such as Ganmo/GNM has multiple matching rows at the requested "
+                        "date and hour, list every matching row and provide the total numeric MW where appropriate. "
                         "Never claim to have written to Google Sheets."
                     ),
                 },
@@ -139,6 +168,7 @@ def answer_question(question: str, records: list[dict[str, Any]], mode: str = "a
                     "role": "user",
                     "content": (
                         f"Task: {prompt_mode}\n"
+                        f"Recent conversation JSON:\n{json.dumps((history or [])[-8:], ensure_ascii=True)}\n\n"
                         f"Question: {question}\n\n"
                         f"Databank records JSON:\n{json.dumps(context, ensure_ascii=True)}"
                     ),

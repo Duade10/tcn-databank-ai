@@ -1,12 +1,13 @@
 const sourceList = document.querySelector("#sourceList");
 const metrics = document.querySelector("#metrics");
-const answer = document.querySelector("#answer");
+const chatMessages = document.querySelector("#chatMessages");
 const queryForm = document.querySelector("#queryForm");
 const sourceForm = document.querySelector("#sourceForm");
 const installButton = document.querySelector("#installButton");
 const archiveStatus = document.querySelector("#archiveStatus");
 const ingestButton = document.querySelector("#ingestButton");
 let deferredPrompt;
+let chatHistory = JSON.parse(localStorage.getItem("tcnChatHistory") || "[]");
 
 async function api(path, options = {}) {
   const { headers: optionHeaders = {}, ...fetchOptions } = options;
@@ -64,22 +65,59 @@ function renderArchive(archive) {
 
 queryForm.addEventListener("submit", async (event) => {
   event.preventDefault();
-  answer.textContent = "Checking the databank...";
+  const questionInput = document.querySelector("#question");
+  const question = questionInput.value.trim();
+  if (!question) return;
+  addMessage("user", question);
+  questionInput.value = "";
+  const loading = addMessage("assistant", "Checking the databank...");
   const source_ids = [...sourceList.querySelectorAll("input:checked")].map((input) => input.value);
   try {
     const result = await api("/api/query", {
       method: "POST",
       body: JSON.stringify({
-        question: document.querySelector("#question").value,
+        question,
         mode: document.querySelector("#mode").value,
         source_ids,
+        history: chatHistory.slice(-10),
       }),
     });
-    answer.textContent = `${result.answer}\n\nContext rows used: ${result.context_rows}`;
+    loading.textContent = `${result.answer}\n\nContext rows used: ${result.context_rows}`;
+    remember("assistant", result.answer);
   } catch (error) {
-    answer.textContent = error.message;
+    loading.textContent = error.message;
+    remember("assistant", error.message);
   }
 });
+
+function addMessage(role, content) {
+  const message = renderMessage(role, content);
+  if (role === "user") remember(role, content);
+  return message;
+}
+
+function renderMessage(role, content) {
+  const message = document.createElement("div");
+  message.className = `message ${role === "user" ? "user-message" : "assistant-message"}`;
+  message.textContent = content;
+  chatMessages.appendChild(message);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+  return message;
+}
+
+function remember(role, content) {
+  chatHistory.push({ role, content });
+  chatHistory = chatHistory.slice(-20);
+  localStorage.setItem("tcnChatHistory", JSON.stringify(chatHistory));
+}
+
+function restoreChat() {
+  if (!chatHistory.length) return;
+  chatMessages.innerHTML = "";
+  chatHistory.slice(-8).forEach((message) => {
+    renderMessage(message.role, message.content);
+  });
+}
 
 sourceForm.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -140,3 +178,4 @@ if ("serviceWorker" in navigator) {
 
 await loadSources();
 await loadCatalog();
+restoreChat();
